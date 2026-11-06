@@ -25,7 +25,7 @@ export function CategoryFilter({
   };
 
   return (
-    <div className="w-full flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none py-1">
+    <div className="w-full flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 scrollbar-none -mx-1 px-1 touch-pan-x">
       {PLATFORM_CATEGORIES.map((cat) => {
         const isSelected = selectedCategory === cat.id;
         const count = getCount(cat.id);
@@ -33,7 +33,7 @@ export function CategoryFilter({
           <button
             key={cat.id}
             onClick={() => onSelectCategory(cat.id)}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold shrink-0 transition-all active:scale-95 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-semibold shrink-0 transition-all active:scale-95 whitespace-nowrap ${
               isSelected
                 ? 'bg-gradient-to-r from-sky-400 to-cyan-500 text-slate-950 shadow-glass-glow font-bold'
                 : 'liquid-btn-secondary text-slate-300 hover:text-white hover:border-sky-400/40'
@@ -42,10 +42,10 @@ export function CategoryFilter({
             {getCategoryIcon(cat.id)}
             <span>{cat.label}</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
                 isSelected
-                  ? 'bg-slate-950/20 text-slate-950'
-                  : 'bg-sky-950/70 text-sky-300 border border-sky-400/20'
+                  ? 'bg-slate-950/25 text-slate-950'
+                  : 'bg-sky-950/80 text-sky-300 border border-sky-400/25'
               }`}
             >
               {count}
@@ -56,4 +56,3 @@ export function CategoryFilter({
     </div>
   );
 }
-

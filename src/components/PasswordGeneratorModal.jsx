@@ -49,19 +49,20 @@ export function PasswordGeneratorModal({ isOpen, onClose, onSelectPassword }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-md liquid-glass-modal rounded-3xl p-6 sm:p-7 text-slate-100 overflow-hidden shadow-2xl border border-sky-400/30">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-md max-h-[92vh] flex flex-col liquid-glass-modal rounded-2xl sm:rounded-3xl text-slate-100 shadow-2xl border border-sky-400/30 overflow-hidden">
         {/* Glow corner */}
         <div className="absolute top-0 right-0 w-36 h-36 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="flex items-center justify-between pb-4 border-b border-sky-900/50">
+        {/* Fixed Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-sky-900/50 shrink-0 bg-[#071d33]/90">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-heading font-semibold text-lg text-white">Password Generator</h3>
-              <p className="text-xs text-sky-300/70">Cryptographically strong & entropy-tested</p>
+              <h3 className="font-heading font-semibold text-base sm:text-lg text-white">Password Generator</h3>
+              <p className="text-[11px] text-sky-300/70">Cryptographically strong & entropy-tested</p>
             </div>
           </div>
           <button
@@ -72,8 +73,8 @@ export function PasswordGeneratorModal({ isOpen, onClose, onSelectPassword }) {
           </button>
         </div>
 
-        {/* Generated Output */}
-        <div className="mt-5 p-4 rounded-2xl bg-sky-950/40 border border-sky-500/30 flex flex-col gap-3">
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between gap-2">
             <span className="font-mono text-lg sm:text-xl font-bold tracking-wider text-sky-200 break-all select-all">
               {password}
@@ -192,12 +193,12 @@ export function PasswordGeneratorModal({ isOpen, onClose, onSelectPassword }) {
           </label>
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-6 flex items-center justify-end gap-3 pt-3 border-t border-sky-900/40">
+        {/* Action Buttons - Sticky */}
+        <div className="p-3 sm:p-4 border-t border-sky-900/50 bg-[#071d33]/95 flex items-center justify-end gap-2.5 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white liquid-btn-secondary"
+            className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-300 hover:text-white liquid-btn-secondary"
           >
             Close
           </button>
@@ -205,7 +206,7 @@ export function PasswordGeneratorModal({ isOpen, onClose, onSelectPassword }) {
             <button
               type="button"
               onClick={handleUsePassword}
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-900 liquid-btn-primary"
+              className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-950 liquid-btn-primary shadow-glass-glow"
             >
               Use This Password
             </button>

@@ -244,6 +244,17 @@ export default function App() {
     }
   };
 
+  // Duplicate Account
+  const handleDuplicateAccount = (account) => {
+    setEditingAccount({
+      ...account,
+      id: null,
+      title: `${account.title} (Copy)`,
+    });
+    setShowAddModal(true);
+    showToast(`Duplicating "${account.title}"`);
+  };
+
   // Import Accounts
   const handleImportAccounts = async (importedList) => {
     if (!currentUser?.uid) return;
@@ -361,12 +372,14 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen relative flex flex-col bg-[#051321] text-slate-100 overflow-x-hidden">
+    <div className="min-h-screen relative flex flex-col bg-[#051321] text-slate-100 overflow-x-hidden w-full">
       
-      {/* Liquid Glass Fluid Background Orbs */}
-      <div className="liquid-orb-1" />
-      <div className="liquid-orb-2" />
-      <div className="liquid-orb-3" />
+      {/* Liquid Glass Fluid Background Orbs safely contained */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="liquid-orb-1" />
+        <div className="liquid-orb-2" />
+        <div className="liquid-orb-3" />
+      </div>
 
       {/* Toast Notification Banner */}
       {toastMessage && (
@@ -506,12 +519,13 @@ export default function App() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
                 {filteredAccounts.map((account) => (
                   <AccountCard
                     key={account.id}
                     account={account}
                     onEdit={(acc) => { setEditingAccount(acc); setShowAddModal(true); }}
+                    onDuplicate={handleDuplicateAccount}
                     onDelete={handleDeleteAccount}
                     onToggleFavorite={handleToggleFavorite}
                     onCopyNotice={showToast}

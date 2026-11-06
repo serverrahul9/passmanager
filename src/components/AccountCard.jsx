@@ -11,7 +11,8 @@ import {
   FileText, 
   ChevronDown, 
   ChevronUp,
-  ShieldCheck
+  ShieldCheck,
+  CopyPlus
 } from 'lucide-react';
 import { PlatformIcon } from './PlatformIcon';
 import { PLATFORM_PRESETS } from '../utils/platforms';
@@ -20,6 +21,7 @@ import { evaluatePasswordStrength } from '../utils/crypto';
 export function AccountCard({
   account,
   onEdit,
+  onDuplicate,
   onDelete,
   onToggleFavorite,
   onCopyNotice,
@@ -35,7 +37,7 @@ export function AccountCard({
     navigator.clipboard.writeText(text);
     setCopiedField(fieldName);
     if (onCopyNotice) {
-      onCopyNotice(`${fieldName === 'id' ? 'Account ID' : 'Password'} copied to clipboard!`);
+      onCopyNotice(`${fieldName === 'id' ? 'Account ID' : 'Password'} copied!`);
     }
     setTimeout(() => {
       setCopiedField(null);
@@ -43,29 +45,29 @@ export function AccountCard({
   };
 
   return (
-    <div className="liquid-glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between relative group overflow-hidden border border-sky-400/20 hover:border-sky-400/40 transition-all duration-300">
+    <div className="liquid-glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between relative group overflow-hidden border border-sky-400/20 hover:border-sky-400/40 transition-all duration-300 w-full">
       
       {/* Top subtle shine effect */}
       <div className="absolute -top-10 -right-10 w-28 h-28 bg-sky-400/10 rounded-full blur-xl pointer-events-none group-hover:bg-sky-400/20 transition-all" />
 
       {/* Header Info */}
       <div>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-2xl p-2.5 flex items-center justify-center bg-gradient-to-br ${preset.bgGradient || 'from-sky-600 to-blue-700'} shadow-md text-white shrink-0`}>
+        <div className="flex items-start justify-between gap-2.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl p-2.5 flex items-center justify-center bg-gradient-to-br ${preset.bgGradient || 'from-sky-600 to-blue-700'} shadow-md text-white shrink-0`}>
               <PlatformIcon type={account.platformId} className="w-6 h-6" url={account.url} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h4 className="font-heading font-semibold text-base sm:text-lg text-white leading-tight">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h4 className="font-heading font-semibold text-base sm:text-lg text-white leading-tight truncate max-w-[170px] sm:max-w-[220px]">
                   {account.title}
                 </h4>
                 {account.isFavorite && (
-                  <Star className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                  <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
                 )}
               </div>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-sky-950/60 text-sky-300 border border-sky-500/20">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className="text-[10px] sm:text-[11px] font-medium px-2 py-0.5 rounded-full bg-sky-950/60 text-sky-300 border border-sky-500/20 truncate">
                   {preset.name.replace(' Account', '')}
                 </span>
                 {account.url && (
@@ -73,7 +75,7 @@ export function AccountCard({
                     href={account.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] text-slate-400 hover:text-sky-300 flex items-center gap-0.5 transition-colors"
+                    className="text-[10px] sm:text-[11px] text-slate-400 hover:text-sky-300 flex items-center gap-0.5 transition-colors"
                   >
                     <span>Visit</span>
                     <ExternalLink className="w-3 h-3" />
@@ -84,25 +86,36 @@ export function AccountCard({
           </div>
 
           {/* Card Action icons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             <button
               onClick={() => onToggleFavorite(account)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-sky-950/40 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-sky-950/40 transition-colors"
               title={account.isFavorite ? 'Remove Favorite' : 'Mark as Favorite'}
+              aria-label="Favorite"
             >
               <Star className={`w-4 h-4 ${account.isFavorite ? 'text-amber-400 fill-amber-400' : ''}`} />
             </button>
             <button
+              onClick={() => onDuplicate && onDuplicate(account)}
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-sky-300 hover:bg-sky-950/40 transition-colors"
+              title="Duplicate Account"
+              aria-label="Duplicate"
+            >
+              <CopyPlus className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => onEdit(account)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-sky-300 hover:bg-sky-950/40 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-sky-300 hover:bg-sky-950/40 transition-colors"
               title="Edit Account"
+              aria-label="Edit"
             >
               <Edit3 className="w-4 h-4" />
             </button>
             <button
               onClick={() => onDelete(account)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition-colors"
               title="Delete Account"
+              aria-label="Delete"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -110,10 +123,10 @@ export function AccountCard({
         </div>
 
         {/* Credentials Box */}
-        <div className="mt-4 space-y-2.5">
+        <div className="mt-4 space-y-2">
           {/* User ID / Email */}
-          <div className="p-2.5 rounded-xl bg-sky-950/30 border border-sky-500/15 flex items-center justify-between gap-2">
-            <div className="overflow-hidden">
+          <div className="p-2.5 rounded-xl bg-sky-950/40 border border-sky-500/15 flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
               <span className="block text-[10px] uppercase font-semibold text-sky-300/70 tracking-wider">
                 ID / Username / Email
               </span>
@@ -126,7 +139,7 @@ export function AccountCard({
               className={`p-2 rounded-lg border transition-all shrink-0 ${
                 copiedField === 'id'
                   ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300'
-                  : 'bg-sky-900/30 hover:bg-sky-800/50 border-sky-500/20 text-sky-300 hover:text-white'
+                  : 'bg-sky-900/40 hover:bg-sky-800/60 border-sky-500/30 text-sky-300 hover:text-white'
               }`}
               title="Copy ID"
             >
@@ -135,9 +148,9 @@ export function AccountCard({
           </div>
 
           {/* Password */}
-          <div className="p-2.5 rounded-xl bg-sky-950/30 border border-sky-500/15 flex items-center justify-between gap-2">
-            <div className="overflow-hidden">
-              <div className="flex items-center gap-2">
+          <div className="p-2.5 rounded-xl bg-sky-950/40 border border-sky-500/15 flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[10px] uppercase font-semibold text-sky-300/70 tracking-wider">
                   Password
                 </span>
@@ -152,7 +165,7 @@ export function AccountCard({
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={() => setShowPassword(!showPassword)}
-                className="p-2 rounded-lg bg-sky-900/30 hover:bg-sky-800/50 border border-sky-500/20 text-slate-300 hover:text-sky-200 transition-colors"
+                className="p-2 rounded-lg bg-sky-900/40 hover:bg-sky-800/60 border border-sky-500/30 text-slate-300 hover:text-sky-200 transition-colors"
                 title={showPassword ? 'Hide Password' : 'Show Password'}
               >
                 {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -162,7 +175,7 @@ export function AccountCard({
                 className={`p-2 rounded-lg border transition-all ${
                   copiedField === 'pwd'
                     ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300'
-                    : 'bg-sky-900/30 hover:bg-sky-800/50 border-sky-500/20 text-sky-300 hover:text-white'
+                    : 'bg-sky-900/40 hover:bg-sky-800/60 border-sky-500/30 text-sky-300 hover:text-white'
                 }`}
                 title="Copy Password"
               >
@@ -175,7 +188,7 @@ export function AccountCard({
 
       {/* Notes / Drawer (if any) */}
       {account.notes && (
-        <div className="mt-3 pt-2.5 border-t border-sky-900/30">
+        <div className="mt-3 pt-2 border-t border-sky-900/30">
           <button
             onClick={() => setShowNotes(!showNotes)}
             className="flex items-center justify-between w-full text-xs text-sky-300/80 hover:text-sky-200"
@@ -187,7 +200,7 @@ export function AccountCard({
             {showNotes ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
           {showNotes && (
-            <div className="mt-2 p-2.5 rounded-xl bg-slate-950/60 border border-sky-500/20 text-xs text-slate-300 whitespace-pre-wrap font-mono select-all">
+            <div className="mt-2 p-2.5 rounded-xl bg-slate-950/70 border border-sky-500/20 text-xs text-slate-300 whitespace-pre-wrap font-mono select-all break-all max-h-36 overflow-y-auto">
               {account.notes}
             </div>
           )}
@@ -204,4 +217,3 @@ export function AccountCard({
     </div>
   );
 }
-

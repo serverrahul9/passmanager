@@ -7,11 +7,9 @@ import {
   Globe, 
   User, 
   Lock, 
-  FileText, 
   Star, 
   Check, 
-  ShieldCheck, 
-  ExternalLink 
+  ShieldCheck 
 } from 'lucide-react';
 import { PLATFORM_PRESETS, PLATFORM_CATEGORIES } from '../utils/platforms';
 import { PlatformIcon } from './PlatformIcon';
@@ -46,7 +44,6 @@ export function AccountModal({
       setNotes(editingAccount.notes || '');
       setIsFavorite(!!editingAccount.isFavorite);
     } else {
-      // Default to Google preset
       const defaultPreset = PLATFORM_PRESETS[0];
       setTitle(defaultPreset.name);
       setPlatformId(defaultPreset.id);
@@ -110,20 +107,20 @@ export function AccountModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto animate-fadeIn">
-      <div className="relative w-full max-w-lg my-8 liquid-glass-modal rounded-3xl p-5 sm:p-7 text-slate-100 shadow-2xl border border-sky-400/30">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-lg max-h-[92vh] flex flex-col liquid-glass-modal rounded-2xl sm:rounded-3xl text-slate-100 shadow-2xl border border-sky-400/30 overflow-hidden">
         
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-sky-900/50">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-sky-900/50 shrink-0 bg-[#071d33]/90">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300">
+            <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300 shrink-0">
               <PlatformIcon type={platformId} className="w-6 h-6" url={url} />
             </div>
             <div>
-              <h3 className="font-heading font-semibold text-lg sm:text-xl text-white">
-                {editingAccount ? 'Edit Account Credentials' : 'Save New Account'}
+              <h3 className="font-heading font-semibold text-base sm:text-xl text-white">
+                {editingAccount ? 'Edit Account' : 'Save New Account'}
               </h3>
-              <p className="text-xs text-sky-300/70">Encrypted with AES-GCM 256 client-side</p>
+              <p className="text-[11px] sm:text-xs text-sky-300/70">Client-Side AES-256 Encrypted</p>
             </div>
           </div>
           <button
@@ -134,14 +131,15 @@ export function AccountModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSubmit} id="account-form" className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           
           {/* Quick Platform Presets */}
           <div>
-            <label className="block text-xs font-medium text-sky-200 mb-2">
+            <label className="block text-xs font-medium text-sky-200 mb-1.5">
               Choose Platform Preset:
             </label>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
               {PLATFORM_PRESETS.map((p) => {
                 const isSelected = platformId === p.id;
                 return (
@@ -149,9 +147,9 @@ export function AccountModal({
                     key={p.id}
                     type="button"
                     onClick={() => handleSelectPreset(p)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-all ${
                       isSelected
-                        ? 'bg-sky-500 text-slate-950 font-semibold shadow-glass-glow'
+                        ? 'bg-sky-500 text-slate-950 font-bold shadow-glass-glow'
                         : 'bg-sky-950/40 text-slate-300 hover:bg-sky-900/50 border border-sky-900/50'
                     }`}
                   >
@@ -173,8 +171,8 @@ export function AccountModal({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. My Personal Instagram"
-                className={`w-full px-3.5 py-2.5 rounded-xl liquid-input text-sm text-white placeholder-slate-500 ${
+                placeholder="e.g. My Instagram"
+                className={`w-full px-3.5 py-2.5 rounded-xl liquid-input text-base sm:text-sm text-white placeholder-slate-500 ${
                   errors.title ? 'border-rose-500' : ''
                 }`}
               />
@@ -188,7 +186,7 @@ export function AccountModal({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl liquid-input text-sm text-white bg-slate-900/80"
+                className="w-full px-3.5 py-2.5 rounded-xl liquid-input text-base sm:text-sm text-white bg-slate-900"
               >
                 {PLATFORM_CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
                   <option key={cat.id} value={cat.id} className="bg-slate-900 text-slate-200">
@@ -209,8 +207,8 @@ export function AccountModal({
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. rahul@gmail.com or @rahul_dev"
-                className={`w-full px-3.5 py-2.5 pl-10 rounded-xl liquid-input text-sm text-white placeholder-slate-500 ${
+                placeholder="e.g. rahul@gmail.com"
+                className={`w-full px-3.5 py-2.5 pl-10 rounded-xl liquid-input text-base sm:text-sm text-white placeholder-slate-500 ${
                   errors.username ? 'border-rose-500' : ''
                 }`}
               />
@@ -231,7 +229,7 @@ export function AccountModal({
                 className="text-xs text-sky-300 hover:text-white flex items-center gap-1 hover:underline font-medium"
               >
                 <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                <span>Generate Strong Password</span>
+                <span>Generate Password</span>
               </button>
             </div>
             <div className="relative">
@@ -240,7 +238,7 @@ export function AccountModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••••••"
-                className={`w-full px-3.5 py-2.5 pl-10 pr-10 rounded-xl liquid-input text-sm font-mono text-white placeholder-slate-500 ${
+                className={`w-full px-3.5 py-2.5 pl-10 pr-10 rounded-xl liquid-input text-base sm:text-sm font-mono text-white placeholder-slate-500 ${
                   errors.password ? 'border-rose-500' : ''
                 }`}
               />
@@ -248,7 +246,7 @@ export function AccountModal({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-300"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-300 p-1"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -262,7 +260,7 @@ export function AccountModal({
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-sky-400" /> Strength: <strong className={strength.text}>{strength.label}</strong>
                   </span>
-                  <span className="text-slate-400">Crack time: {strength.crackTime}</span>
+                  <span className="text-slate-400">{strength.crackTime}</span>
                 </div>
                 <div className="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden">
                   <div
@@ -284,8 +282,8 @@ export function AccountModal({
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://accounts.google.com"
-                className="w-full px-3.5 py-2.5 pl-10 rounded-xl liquid-input text-sm text-white placeholder-slate-500"
+                placeholder="https://instagram.com"
+                className="w-full px-3.5 py-2.5 pl-10 rounded-xl liquid-input text-base sm:text-sm text-white placeholder-slate-500"
               />
               <Globe className="w-4 h-4 text-sky-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             </div>
@@ -300,13 +298,13 @@ export function AccountModal({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Recovery email, security answers, PIN, backup codes..."
-              className="w-full px-3.5 py-2.5 rounded-xl liquid-input text-sm text-white placeholder-slate-500 resize-none"
+              placeholder="Recovery email, PIN, security answers..."
+              className="w-full px-3.5 py-2.5 rounded-xl liquid-input text-base sm:text-sm text-white placeholder-slate-500 resize-none"
             />
           </div>
 
           {/* Favorite Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-sky-950/20 border border-sky-900/40">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-sky-950/30 border border-sky-900/40">
             <span className="text-xs font-medium text-slate-200 flex items-center gap-2">
               <Star className={`w-4 h-4 ${isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-400'}`} />
               Star as Favorite Account
@@ -318,27 +316,27 @@ export function AccountModal({
               className="w-4 h-4 rounded text-sky-500 bg-slate-900 border-sky-400/40 focus:ring-sky-400 cursor-pointer"
             />
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-sky-900/40">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white liquid-btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold text-slate-900 liquid-btn-primary shadow-glass-glow flex items-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              <span>{editingAccount ? 'Update Account' : 'Save Securely'}</span>
-            </button>
-          </div>
         </form>
+
+        {/* Footer - Sticky at bottom */}
+        <div className="p-3 sm:p-4 border-t border-sky-900/50 bg-[#071d33]/95 flex items-center justify-end gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-300 hover:text-white liquid-btn-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="account-form"
+            className="px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-950 liquid-btn-primary shadow-glass-glow flex items-center gap-2"
+          >
+            <Check className="w-4 h-4 stroke-[3]" />
+            <span>{editingAccount ? 'Update Account' : 'Save Securely'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-

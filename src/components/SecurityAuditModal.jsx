@@ -41,18 +41,18 @@ export function SecurityAuditModal({ isOpen, onClose, accounts, onEditAccount })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md overflow-y-auto animate-fadeIn">
-      <div className="relative w-full max-w-lg my-8 liquid-glass-modal rounded-3xl p-6 sm:p-7 text-slate-100 shadow-2xl border border-sky-400/30">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-lg max-h-[92vh] flex flex-col liquid-glass-modal rounded-2xl sm:rounded-3xl text-slate-100 shadow-2xl border border-sky-400/30 overflow-hidden">
         
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-sky-900/50">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-sky-900/50 shrink-0 bg-[#071d33]/90">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-heading font-semibold text-lg sm:text-xl text-white">Vault Health Audit</h3>
-              <p className="text-xs text-sky-300/70">Security & vulnerability analysis</p>
+              <h3 className="font-heading font-semibold text-base sm:text-xl text-white">Vault Health Audit</h3>
+              <p className="text-[11px] text-sky-300/70">Security & vulnerability analysis</p>
             </div>
           </div>
           <button
@@ -62,6 +62,9 @@ export function SecurityAuditModal({ isOpen, onClose, accounts, onEditAccount })
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
 
         {/* Overall Score Circle */}
         <div className="mt-6 flex flex-col items-center justify-center p-6 rounded-2xl bg-sky-950/30 border border-sky-500/20">
@@ -150,11 +153,13 @@ export function SecurityAuditModal({ isOpen, onClose, accounts, onEditAccount })
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 flex justify-end">
+        </div>
+
+        {/* Footer - Sticky */}
+        <div className="p-3 sm:p-4 border-t border-sky-900/50 bg-[#071d33]/95 flex justify-end shrink-0">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl text-sm font-semibold text-slate-900 liquid-btn-primary"
+            className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-950 liquid-btn-primary shadow-glass-glow"
           >
             Close Audit
           </button>
