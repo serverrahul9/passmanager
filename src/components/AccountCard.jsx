@@ -53,7 +53,7 @@ export function AccountCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={`w-11 h-11 rounded-2xl p-2.5 flex items-center justify-center bg-gradient-to-br ${preset.bgGradient || 'from-sky-600 to-blue-700'} shadow-md text-white shrink-0`}>
-              <PlatformIcon type={account.platformId} className="w-6 h-6" />
+              <PlatformIcon type={account.platformId} className="w-6 h-6" url={account.url} />
             </div>
             <div>
               <div className="flex items-center gap-2">

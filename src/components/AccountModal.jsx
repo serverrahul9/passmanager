@@ -117,7 +117,7 @@ export function AccountModal({
         <div className="flex items-center justify-between pb-4 border-b border-sky-900/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300">
-              <PlatformIcon type={platformId} className="w-6 h-6" />
+              <PlatformIcon type={platformId} className="w-6 h-6" url={url} />
             </div>
             <div>
               <h3 className="font-heading font-semibold text-lg sm:text-xl text-white">
