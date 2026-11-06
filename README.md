@@ -43,7 +43,6 @@ All user details, IDs, passwords, and sensitive notes are **client-side end-to-e
   - **Email OTP Login** powered by **Resend API** with HTML liquid glass email templates.
   - **Google Auth** with single-click Firebase popup.
   - **Email & Password** registration / sign-in.
-  - **Instant Guest / Demo Mode** for testing.
 
 - **Backup & Portability**:
   - Export encrypted JSON backup of all accounts for offline safekeeping.
