@@ -1,22 +1,16 @@
 import React from 'react';
 import { 
   ShieldCheck, 
-  Lock, 
-  Unlock, 
   Sparkles, 
   Activity, 
   LogOut, 
   Download, 
   Plus, 
-  KeyRound,
   User
 } from 'lucide-react';
 
 export function Navbar({
   user,
-  isUnlocked,
-  onLockVault,
-  onUnlockVault,
   onOpenAddModal,
   onOpenGenerator,
   onOpenAudit,
@@ -43,7 +37,7 @@ export function Navbar({
               </span>
             </div>
             <p className="hidden sm:block text-[11px] text-sky-200/60 leading-none">
-              Zero-Knowledge Credential Manager
+              Secure Cloud ID & Password Manager
             </p>
           </div>
         </div>
@@ -51,20 +45,6 @@ export function Navbar({
         {/* Center / Action Buttons */}
         {user && (
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Lock / Unlock Status Toggle */}
-            <button
-              onClick={isUnlocked ? onLockVault : onUnlockVault}
-              className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-semibold border transition-all ${
-                isUnlocked
-                  ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300 hover:bg-emerald-500/25'
-                  : 'bg-amber-500/15 border-amber-400/40 text-amber-300 hover:bg-amber-500/25 animate-pulse'
-              }`}
-              title={isUnlocked ? 'Lock Vault (Clear key from memory)' : 'Unlock Vault'}
-            >
-              {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{isUnlocked ? 'Vault Unlocked' : 'Vault Locked'}</span>
-            </button>
-
             {/* Password Generator */}
             <button
               onClick={onOpenGenerator}
@@ -98,8 +78,7 @@ export function Navbar({
             {/* Add Account Button (Desktop) */}
             <button
               onClick={onOpenAddModal}
-              disabled={!isUnlocked}
-              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-950 liquid-btn-primary shadow-glass-glow disabled:opacity-40"
+              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-950 liquid-btn-primary shadow-glass-glow"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Add Account</span>
@@ -127,4 +106,3 @@ export function Navbar({
     </header>
   );
 }
-

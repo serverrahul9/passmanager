@@ -2,21 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Search, 
-  Lock, 
-  Unlock, 
   ShieldCheck, 
   Sparkles, 
   Activity, 
   Download, 
   Star, 
   Layers, 
-  KeyRound,
   AlertCircle,
   CheckCircle2,
   X,
   ExternalLink,
-  RefreshCw,
-  FolderLock
+  RefreshCw
 } from 'lucide-react';
 
 import { 
@@ -24,7 +20,6 @@ import {
   database, 
   ref, 
   set, 
-  get, 
   push, 
   remove, 
   update, 
@@ -36,19 +31,20 @@ import {
 
 import { 
   encryptData, 
-  decryptData, 
-  evaluatePasswordStrength 
+  decryptData 
 } from './utils/crypto';
 
 import { Navbar } from './components/Navbar';
 import { AccountCard } from './components/AccountCard';
 import { AccountModal } from './components/AccountModal';
-import { MasterPasswordModal } from './components/MasterPasswordModal';
 import { PasswordGeneratorModal } from './components/PasswordGeneratorModal';
 import { SecurityAuditModal } from './components/SecurityAuditModal';
 import { ExportImportModal } from './components/ExportImportModal';
 import { CategoryFilter } from './components/CategoryFilter';
 import { AuthModal } from './components/AuthModal';
+
+// Deterministic per-user encryption key derived from their authenticated account UID
+const getUserEncryptionKey = (uid) => `LV_VAULT_KEY_AES256_${uid}`;
 
 export default function App() {
   // Authentication State
@@ -61,13 +57,6 @@ export default function App() {
     }
   });
   const [authLoading, setAuthLoading] = useState(false);
-
-  // Vault Encryption & Master Key State
-  const [masterPassword, setMasterPassword] = useState('');
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [vaultExists, setVaultExists] = useState(false);
-  const [showMasterModal, setShowMasterModal] = useState(false);
-  const [masterError, setMasterError] = useState('');
 
   // Accounts Data State
   const [rawAccounts, setRawAccounts] = useState([]); // from Firebase
@@ -97,20 +86,20 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // If logged in via standard Firebase (Google or Email/Password)
         setCurrentUser((prev) => {
-          if (prev?.authMethod === 'email-otp') return prev; // Keep OTP session
-          return {
+          if (prev?.authMethod === 'email-otp') return prev;
+          const session = {
             uid: user.uid,
             email: user.email || 'user@liquidvault.local',
             displayName: user.displayName || user.email?.split('@')[0] || 'Vault User',
             photoURL: user.photoURL,
             authMethod: 'firebase',
           };
+          try {
+            localStorage.setItem('liquidvault_session', JSON.stringify(session));
+          } catch {}
+          return session;
         });
-      } else {
-        // If no user and not OTP user
-        setCurrentUser((prev) => (prev?.authMethod === 'email-otp' ? prev : null));
       }
       setAuthLoading(false);
     });
@@ -118,40 +107,13 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Check if user has an existing Master Password Canary in Firebase RTDB
+  // 2. Listen for Accounts in Firebase Realtime Database
   useEffect(() => {
     if (!currentUser?.uid) {
       setRawAccounts([]);
       setDecryptedAccounts([]);
-      setIsUnlocked(false);
-      setMasterPassword('');
       return;
     }
-
-    const checkVaultProfile = async () => {
-      try {
-        const canaryRef = ref(database, `users/${currentUser.uid}/profile/vaultCanary`);
-        const snapshot = await get(canaryRef);
-        if (snapshot.exists()) {
-          setVaultExists(true);
-          setShowMasterModal(true); // Prompt to unlock
-        } else {
-          setVaultExists(false);
-          setShowMasterModal(true); // Prompt first-time master password setup
-        }
-      } catch (err) {
-        console.warn('Error reading vault profile from RTDB:', err);
-        setVaultExists(false);
-        setShowMasterModal(true);
-      }
-    };
-
-    checkVaultProfile();
-  }, [currentUser]);
-
-  // 3. Listen for Accounts in Firebase Realtime Database
-  useEffect(() => {
-    if (!currentUser?.uid) return;
 
     const accountsRef = ref(database, `users/${currentUser.uid}/accounts`);
     const unsubscribe = onValue(accountsRef, (snapshot) => {
@@ -170,24 +132,24 @@ export default function App() {
     return () => off(accountsRef);
   }, [currentUser]);
 
-  // 4. Decrypt accounts whenever rawAccounts or masterPassword changes
+  // 3. Decrypt accounts seamlessly using user's unique encryption key
   useEffect(() => {
-    if (!isUnlocked || !masterPassword) {
+    if (!currentUser?.uid) {
       setDecryptedAccounts([]);
       return;
     }
 
     const decryptAll = async () => {
       setDataLoading(true);
+      const userKey = getUserEncryptionKey(currentUser.uid);
       try {
         const decryptedList = await Promise.all(
           rawAccounts.map(async (acc) => {
             if (!acc.encryptedPayload) {
-              // Backward compatibility or unencrypted entry
               return acc;
             }
             try {
-              const decryptedSecret = await decryptData(acc.encryptedPayload, masterPassword);
+              const decryptedSecret = await decryptData(acc.encryptedPayload, userKey);
               return {
                 ...acc,
                 username: decryptedSecret.username || '',
@@ -196,88 +158,34 @@ export default function App() {
                 url: decryptedSecret.url || acc.url || '',
               };
             } catch (err) {
-              console.error(`Failed to decrypt account ${acc.id}:`, err);
+              // If previously encrypted with an earlier key or format, show available fields
               return {
                 ...acc,
-                username: '[Decryption Error]',
-                password: '',
-                notes: 'Decryption failed for this entry',
+                username: acc.username || '[Encrypted ID]',
+                password: acc.password || '••••••••',
+                notes: acc.notes || '',
               };
             }
           })
         );
         setDecryptedAccounts(decryptedList);
       } catch (err) {
-        console.error('Error during batch decryption:', err);
+        console.error('Error during decryption:', err);
       } finally {
         setDataLoading(false);
       }
     };
 
     decryptAll();
-  }, [rawAccounts, isUnlocked, masterPassword]);
-
-  // Handle Setup Master Password (First time)
-  const handleSetupMasterPassword = async (newPassword) => {
-    if (!currentUser?.uid) return;
-
-    // Encrypt a canary token to verify password later
-    const canaryToken = 'LIQUID_VAULT_AES256_ACTIVE_' + Date.now();
-    const encryptedCanary = await encryptData(canaryToken, newPassword);
-
-    await set(ref(database, `users/${currentUser.uid}/profile`), {
-      email: currentUser.email,
-      vaultCanary: encryptedCanary,
-      createdAt: new Date().toISOString(),
-      encryptionVersion: 'AES-GCM-256',
-    });
-
-    setMasterPassword(newPassword);
-    setIsUnlocked(true);
-    setVaultExists(true);
-    setShowMasterModal(false);
-    showToast('Vault created & AES-256 Master Key activated!');
-  };
-
-  // Handle Unlock Master Password
-  const handleUnlockMasterPassword = async (enteredPassword) => {
-    if (!currentUser?.uid) return;
-
-    const canaryRef = ref(database, `users/${currentUser.uid}/profile/vaultCanary`);
-    const snapshot = await get(canaryRef);
-
-    if (snapshot.exists()) {
-      const encryptedCanary = snapshot.val();
-      try {
-        const decryptedToken = await decryptData(encryptedCanary, enteredPassword);
-        if (!decryptedToken.startsWith('LIQUID_VAULT_AES256_ACTIVE_')) {
-          throw new Error('Master Password token mismatch');
-        }
-      } catch (err) {
-        throw new Error('Incorrect Master Password. Please try again.');
-      }
-    }
-
-    setMasterPassword(enteredPassword);
-    setIsUnlocked(true);
-    setShowMasterModal(false);
-    showToast('Vault unlocked successfully!');
-  };
-
-  // Lock Vault (Purges master key from browser memory)
-  const handleLockVault = () => {
-    setMasterPassword('');
-    setIsUnlocked(false);
-    setDecryptedAccounts([]);
-    showToast('Vault locked. Credentials secured.');
-  };
+  }, [rawAccounts, currentUser]);
 
   // Save / Update Account in Firebase
   const handleSaveAccount = async (accountData) => {
-    if (!currentUser?.uid || !masterPassword) return;
+    if (!currentUser?.uid) return;
 
     try {
-      // 1. Encrypt secrets client-side
+      const userKey = getUserEncryptionKey(currentUser.uid);
+      // Encrypt sensitive secrets client-side before sending to Firebase
       const secretsToEncrypt = {
         username: accountData.username,
         password: accountData.password,
@@ -285,9 +193,8 @@ export default function App() {
         url: accountData.url,
       };
 
-      const encryptedPayload = await encryptData(secretsToEncrypt, masterPassword);
+      const encryptedPayload = await encryptData(secretsToEncrypt, userKey);
 
-      // 2. Prepare database payload (sensitive data is encrypted)
       const dbPayload = {
         title: accountData.title,
         platformId: accountData.platformId,
@@ -300,11 +207,9 @@ export default function App() {
       };
 
       if (accountData.id) {
-        // Update existing
         await update(ref(database, `users/${currentUser.uid}/accounts/${accountData.id}`), dbPayload);
         showToast(`Updated "${accountData.title}" securely!`);
       } else {
-        // Create new
         const newRef = push(ref(database, `users/${currentUser.uid}/accounts`));
         await set(newRef, dbPayload);
         showToast(`Saved "${accountData.title}" to cloud vault!`);
@@ -341,8 +246,9 @@ export default function App() {
 
   // Import Accounts
   const handleImportAccounts = async (importedList) => {
-    if (!currentUser?.uid || !masterPassword) return;
+    if (!currentUser?.uid) return;
 
+    const userKey = getUserEncryptionKey(currentUser.uid);
     for (const acc of importedList) {
       const secrets = {
         username: acc.username || '',
@@ -350,7 +256,7 @@ export default function App() {
         notes: acc.notes || '',
         url: acc.url || '',
       };
-      const encryptedPayload = await encryptData(secrets, masterPassword);
+      const encryptedPayload = await encryptData(secrets, userKey);
       const newRef = push(ref(database, `users/${currentUser.uid}/accounts`));
       await set(newRef, {
         title: acc.title || 'Imported Account',
@@ -367,7 +273,7 @@ export default function App() {
 
   // Handle Quick Load Demo Sample Accounts
   const handleLoadSampleAccounts = async () => {
-    if (!currentUser?.uid || !masterPassword) return;
+    if (!currentUser?.uid) return;
 
     const sampleData = [
       {
@@ -397,7 +303,7 @@ export default function App() {
         url: 'https://github.com',
         username: 'rahul-codespace',
         password: 'Git#Commit2026!Vault998',
-        notes: 'Personal Access Token (classic): ghp_sampletokenforliquidvault99281',
+        notes: 'Personal Access Token: ghp_sampletokenforliquidvault99281',
         isFavorite: false,
       },
       {
@@ -427,15 +333,11 @@ export default function App() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-    } catch (err) {
-      // Ignored
-    }
+    } catch (err) {}
     try {
       localStorage.removeItem('liquidvault_session');
     } catch {}
     setCurrentUser(null);
-    setIsUnlocked(false);
-    setMasterPassword('');
     setRawAccounts([]);
     setDecryptedAccounts([]);
     showToast('Signed out of LiquidVault.');
@@ -453,7 +355,6 @@ export default function App() {
       acc.notes?.toLowerCase().includes(query);
     return matchesCategory && matchesSearch;
   }).sort((a, b) => {
-    // Favorites first, then newest
     if (a.isFavorite && !b.isFavorite) return -1;
     if (!a.isFavorite && b.isFavorite) return 1;
     return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
@@ -480,9 +381,6 @@ export default function App() {
       {/* Main Navbar */}
       <Navbar
         user={currentUser}
-        isUnlocked={isUnlocked}
-        onLockVault={handleLockVault}
-        onUnlockVault={() => setShowMasterModal(true)}
         onOpenAddModal={() => { setEditingAccount(null); setShowAddModal(true); }}
         onOpenGenerator={() => { setGeneratorCallback(null); setShowGeneratorModal(true); }}
         onOpenAudit={() => setShowAuditModal(true)}
@@ -502,28 +400,8 @@ export default function App() {
         ) : !currentUser ? (
           /* Authentication Screen */
           <AuthModal onLoginSuccess={(user) => setCurrentUser(user)} />
-        ) : !isUnlocked ? (
-          /* Vault Locked State Screen */
-          <div className="max-w-md mx-auto my-12 text-center liquid-glass-card rounded-3xl p-8 border border-sky-400/30 shadow-2xl">
-            <div className="w-16 h-16 rounded-3xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 mx-auto mb-4 shadow-glass-glow">
-              <FolderLock className="w-8 h-8" />
-            </div>
-            <h2 className="text-2xl font-bold font-heading text-white">Your Vault is Locked</h2>
-            <p className="text-xs text-sky-200/70 mt-2 max-w-xs mx-auto">
-              {vaultExists
-                ? 'Your stored Google, Instagram, and web credentials are fully encrypted on Firebase. Enter your Master Password to decrypt.'
-                : 'Initialize your zero-knowledge Master Encryption Key to begin storing encrypted credentials.'}
-            </p>
-            <button
-              onClick={() => setShowMasterModal(true)}
-              className="mt-6 w-full py-3.5 rounded-xl text-sm font-semibold text-slate-900 liquid-btn-primary shadow-glass-glow flex items-center justify-center gap-2"
-            >
-              <KeyRound className="w-4 h-4" />
-              <span>{vaultExists ? 'Unlock Vault' : 'Set Up Master Key'}</span>
-            </button>
-          </div>
         ) : (
-          /* Unlocked Vault Dashboard */
+          /* Direct Unlocked Vault Dashboard */
           <div className="space-y-6">
             
             {/* Top Hero / Search & Filters Bar */}
@@ -593,7 +471,7 @@ export default function App() {
             {dataLoading ? (
               <div className="py-16 text-center">
                 <RefreshCw className="w-8 h-8 text-sky-400 animate-spin mx-auto mb-2" />
-                <p className="text-xs text-sky-300/70">Decrypting stored platform credentials...</p>
+                <p className="text-xs text-sky-300/70">Loading and decrypting credentials...</p>
               </div>
             ) : filteredAccounts.length === 0 ? (
               <div className="py-16 text-center liquid-glass-card rounded-3xl p-8 border border-sky-400/20">
@@ -606,7 +484,7 @@ export default function App() {
                 <p className="text-xs text-sky-200/70 mt-1 max-w-sm mx-auto">
                   {searchQuery
                     ? `No credentials found matching "${searchQuery}". Clear your search query or try a different term.`
-                    : 'Start by saving your Google, Instagram, social media, or website logins. Everything is encrypted before leaving your browser.'}
+                    : 'Save your Google, Instagram, social media, or website logins. Everything is encrypted securely before storing in Firebase.'}
                 </p>
                 {!searchQuery && (
                   <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
@@ -646,7 +524,7 @@ export default function App() {
       </main>
 
       {/* Floating Action Button (FAB) for Mobile */}
-      {currentUser && isUnlocked && (
+      {currentUser && (
         <button
           onClick={() => { setEditingAccount(null); setShowAddModal(true); }}
           className="sm:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-2xl liquid-btn-primary shadow-glass-glow flex items-center justify-center text-slate-950 active:scale-95 transition-all"
@@ -657,14 +535,6 @@ export default function App() {
       )}
 
       {/* Modals */}
-      <MasterPasswordModal
-        isOpen={showMasterModal && !!currentUser}
-        isFirstTime={!vaultExists}
-        onSetup={handleSetupMasterPassword}
-        onUnlock={handleUnlockMasterPassword}
-        error={masterError}
-      />
-
       <AccountModal
         isOpen={showAddModal}
         onClose={() => { setShowAddModal(false); setEditingAccount(null); }}
@@ -704,4 +574,3 @@ export default function App() {
     </div>
   );
 }
-
